@@ -13,12 +13,17 @@ jobs:
     name: api-ci
     runs-on: ubuntu-latest
 
-    if: ${{ (vars.ALLOWED_BRANCHES == github.ref_name && github.event_name == 'pull_request') || 
-            (github.event_name == 'push' && vars.ALLOWED_BRANCHES == github.ref_name) }}
+    if: ${{ github.event_name == 'push' || github.event_name == 'pull_request' }}
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Show event and branch
+        run: |
+          echo "Event: ${{ github.event_name }}"
+          echo "Ref Name: ${{ github.ref_name }}"
+          echo "Full Ref: ${{ github.ref }}"
+
       - name: Say Hello
-        run: echo "Hello World - this is PR or Push trigger"
+        run: echo "Hello World - pipeline is running!"
