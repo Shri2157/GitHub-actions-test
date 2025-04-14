@@ -18,6 +18,7 @@ jobs:
 
     if: ${{ (env.ALLOWED_BRANCHES == env.CURRENT_BRANCH && github.event_name == 'pull_request') || (github.event_name == 'push' && env.ALLOWED_BRANCHES == env.CURRENT_BRANCH) }}
 
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
