@@ -15,7 +15,33 @@ jobs:
     env:
      # TEST_ENV: ${{ secrets.API_DEV_TEST_ENV_FILE }}
       ALLOWED_BRANCHES: ${{ vars.ALLOWED_BRANCHES }}
-      CURRENT_BRANCH: ${GITHUB_REF##*/}
+     name: Hello World Workflow
+
+on:
+  push:
+    branches:
+      - "*"  
+  pull_request:
+    branches:
+      - "*"  
+
+jobs:
+  build:
+    name: api-ci
+    runs-on: ubuntu-latest
+    env:
+      ALLOWED_BRANCHES: ${{ vars.ALLOWED_BRANCHES }}
+      CURRENT_BRANCH: ${{ github.ref_name }}  # Corrected from ${GITHUB_REF##*/}
+
+    if: ${{ (env.ALLOWED_BRANCHES == env.CURRENT_BRANCH && github.event_name == 'pull_request') || (github.event_name == 'push' && env.ALLOWED_BRANCHES == env.CURRENT_BRANCH) }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Say Hello
+        run: echo "Hello World this is PR trigger"
+
      if: ${{ (env.ALLOWED_BRANCHES == env.CURRENT_BRANCH && github.event_name == 'pull_request') || (github.event_name == 'push' && env.ALLOWED_BRANCHES == env.CURRENT_BRANCH) }}
     # if: ${{ env.ALLOWED_BRANCHES == env.CURRENT_BRANCH && github.event_name == 'pull_request' }}
 
