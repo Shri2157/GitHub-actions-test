@@ -1,29 +1,61 @@
-name: Hello World Workflow
+name: Branch Filtered Workflow
 
 on:
   push:
-    branches:
-      - "*"  
+    branches: ["*"]
   pull_request:
-    branches:
-      - "*"  
+    branches: ["*"]
 
 jobs:
-  build:
-    name: api-ci
+  branch-check:
     runs-on: ubuntu-latest
-
-    if: ${{ github.event_name == 'push' || github.event_name == 'pull_request' }}
+    env:
+      ALLOWED_BRANCHES: ${{ vars.ALLOWED_BRANCHES }}
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Show event and branch
+      - name: Determine branch
+        id: branch
         run: |
-          echo "Event: ${{ github.event_name }}"
-          echo "Ref Name: ${{ github.ref_name }}"
-          echo "Full Ref: ${{ github.ref }}"
+          echo "ref: $GITHUB_REF"
+          # Get actual branch name for push or PR
+          if [[ "${GITHUB_REF}" == refs/heads/* ]]; then
+            BRANCH="${GITHUB_REF#refs/heads/}"
+          elif [[ "${GITHUB_REF}" == refs/pull/* ]]; then
+            BRANCH="${GITHUB_HEAD_REF}"
+          else
+            echo "Unknown ref format: $GITHUB_REF"
+            exit 1
+          fi
+          echo "CURRENT_BRANCH=$BRANCH" >> $GITHUB_ENV
 
-      - name: Say Hello
-        run: echo "Hello World - pipeline is running!"
+      - name: Check if current branch is allowed
+        id: check
+        run: |
+          echo "Allowed branches: $ALLOWED_BRANCHES"
+          echo "Current branch: $CURRENT_BRANCH"
+          RUN_PIPELINE=false
+          for pattern in $ALLOWED_BRANCHES; do
+            if [[ "$CURRENT_BRANCH" == $pattern ]]; then
+              RUN_PIPELINE=true
+              break
+            fi
+            # Handle wildcard pattern (feature/*, release/*)
+            if [[ "$pattern" == *"*"* ]]; then
+              if [[ "$CURRENT_BRANCH" == $pattern ]]; then
+                RUN_PIPELINE=true
+                break
+              fi
+            fi
+          done
+          echo "RUN_PIPELINE=$RUN_PIPELINE" >> $GITHUB_ENV
+
+      - name: Run only if branch is allowed
+        if: env.RUN_PIPELINE == 'true'
+        run: echo "✅ Allowed branch '$CURRENT_BRANCH' — running pipeline!"
+
+      - name: Skip message if branch not allowed
+        if: env.RUN_PIPELINE != 'true'
+        run: echo "❌ Branch '$CURRENT_BRANCH' not allowed — skipping logic."
