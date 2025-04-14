@@ -23,20 +23,24 @@ jobs:
           # Get actual branch name for push or PR
           if [[ "${GITHUB_REF}" == refs/heads/* ]]; then
             BRANCH="${GITHUB_REF#refs/heads/}"
+          #cheching if it is pull request and accordingly pulling the branch name
           elif [[ "${GITHUB_REF}" == refs/pull/* ]]; then
             BRANCH="${GITHUB_HEAD_REF}"
           else
             echo "Unknown ref format: $GITHUB_REF"
             exit 1
           fi
-          echo "CURRENT_BRANCH=$BRANCH" >> $GITHUB_ENV
+          #setting env named "CURRENT_BRANCH"
+          echo "CURRENT_BRANCH=$BRANCH" >> $GITHUB_ENV  
 
       - name: Check if current branch is allowed
         id: check
         run: |
           echo "Allowed branches: $ALLOWED_BRANCHES"
           echo "Current branch: $CURRENT_BRANCH"
+          #setting up varibale run-pipeline to false
           RUN_PIPELINE=false
+          # checking the allowed branches and making the variable true for further pipeline running
           for pattern in $ALLOWED_BRANCHES; do
             if [[ "$CURRENT_BRANCH" == $pattern ]]; then
               RUN_PIPELINE=true
