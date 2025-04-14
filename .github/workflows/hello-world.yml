@@ -12,16 +12,13 @@ jobs:
   build:
     name: api-ci
     runs-on: ubuntu-latest
-    env:
-      ALLOWED_BRANCHES: ${{ vars.ALLOWED_BRANCHES }}
-      CURRENT_BRANCH: ${{ github.ref_name }}  # Corrected from ${GITHUB_REF##*/}
 
-    if: ${{ (env.ALLOWED_BRANCHES == env.CURRENT_BRANCH && github.event_name == 'pull_request') || (github.event_name == 'push' && env.ALLOWED_BRANCHES == env.CURRENT_BRANCH) }}
-
+    if: ${{ (vars.ALLOWED_BRANCHES == github.ref_name && github.event_name == 'pull_request') || 
+            (github.event_name == 'push' && vars.ALLOWED_BRANCHES == github.ref_name) }}
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Say Hello
-        run: echo "Hello World this is PR trigger"
+        run: echo "Hello World - this is PR or Push trigger"
